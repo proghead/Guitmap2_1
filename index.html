@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filter Overlay</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <h1>Filter Overlay App</h1>
+
+  <div id="app">
+    <label for="filter">Choose a Filter:</label>
+    <select id="filter">
+      <option value="./filters/filter1.png">Filter 1</option>
+      <option value="./filters/filter2.png">Filter 2</option>
+    </select>
+
+    <label for="zoom">Zoom Level:</label>
+    <input type="range" id="zoom" min="1" max="3" step="0.1" value="1">
+
+    <div id="preview">
+      <img id="face" src="./faces/face1.jpg" alt="Face">
+      <img id="filter-overlay" src="./filters/filter1.png" alt="Filter Overlay">
+    </div>
+  </div>
+
+  <script src="./js/filters.js"></script>
+  <script src="./js/zoom.js"></script>
+</body>
+</html>
+

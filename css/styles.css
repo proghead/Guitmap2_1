@@ -1,0 +1,39 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  
+  h1 {
+    margin-top: 20px;
+  }
+  
+  #app {
+    margin: 20px auto;
+    width: 300px;
+    text-align: left;
+  }
+  
+  #preview {
+    position: relative;
+    margin-top: 20px;
+    width: 300px;
+    height: 300px;
+    border: 1px solid #ccc;
+    overflow: hidden;
+  }
+  
+  #preview img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  #filter-overlay {
+    pointer-events: none;
+  }
+  
