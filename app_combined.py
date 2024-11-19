@@ -5,26 +5,33 @@ import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure the uploads folder exists
-os.makedirs("faces", exist_ok=True)       # Ensure the faces folder exists
+# Folder Setup
+UPLOAD_FOLDER = "static/uploads"
+FACES_FOLDER = "static/faces"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure uploads folder exists
+os.makedirs(FACES_FOLDER, exist_ok=True)  # Ensure faces folder exists
 
 # Variables for dynamic features
 current_mode = "face_detection"
 
-# Initialize Mediapipe Face Detection (for deep learning-based detection)
+# Mediapipe Face Detection
 mp_face_detection = mp.solutions.face_detection.FaceDetection(min_detection_confidence=0.5)
+
 
 @app.route("/")
 def index():
     # Render the main dashboard
     return render_template("dashboard.html", mode=current_mode)
 
+
 @app.route("/set_mode/<mode>")
 def set_mode(mode):
     global current_mode
     current_mode = mode
     return ("", 204)  # Return an empty response for JavaScript handling
+
 
 @app.route("/video_feed")
 def video_feed():
@@ -41,12 +48,11 @@ def video_feed():
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
                 for (x, y, w, h) in faces:
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
             elif current_mode == "ar_overlay":
-                # Add AR overlay with the mask
                 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-                overlay = cv2.imread("makeup_clip_art2_gene_simmons.png", -1)  # Overlay image
+                overlay = cv2.imread("static/makeup_clip_art2_gene_simmons.png", -1)  # AR Overlay
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
                 for (x, y, w, h) in faces:
@@ -54,23 +60,21 @@ def video_feed():
                     frame = overlay_on_face(frame, resized_overlay, x, y)
 
             elif current_mode == "save_faces":
-                # Save detected faces
                 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
                 for i, (x, y, w, h) in enumerate(faces):
-                    face = frame[y:y+h, x:x+w]
-                    cv2.imwrite(f'faces/face_{i}.jpg', face)
+                    face = frame[y:y + h, x:x + w]
+                    cv2.imwrite(os.path.join(FACES_FOLDER, f'face_{i}.jpg'), face)
 
             elif current_mode == "deep_learning_detection":
-                # Use Mediapipe for face detection
                 results = mp_face_detection.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                 if results.detections:
                     for detection in results.detections:
                         bboxC = detection.location_data.relative_bounding_box
                         ih, iw, _ = frame.shape
                         x, y, w, h = int(bboxC.xmin * iw), int(bboxC.ymin * ih), int(bboxC.width * iw), int(bboxC.height * ih)
-                        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
             _, buffer = cv2.imencode('.jpg', frame)
             yield (b'--frame\r\n'
@@ -78,6 +82,7 @@ def video_feed():
         cap.release()
 
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 # Helper function for overlay
 def overlay_on_face(frame, overlay, x, y):
@@ -88,9 +93,9 @@ def overlay_on_face(frame, overlay, x, y):
     alpha_s = overlay[:, :, 3] / 255.0
     alpha_l = 1.0 - alpha_s
     for c in range(3):  # RGB Channels
-        frame[y:y+h, x:x+w, c] = (alpha_s * overlay[:, :, c] + alpha_l * frame[y:y+h, x:x+w, c])
+        frame[y:y + h, x:x + w, c] = (alpha_s * overlay[:, :, c] +
+                                      alpha_l * frame[y:y + h, x:x + w, c])
     return frame
-
 
 
 if __name__ == "__main__":
